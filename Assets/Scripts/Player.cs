@@ -7,6 +7,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Inputer _inputer;
     [SerializeField] private float _horizontalSpeed;
     [SerializeField] private float _verticalSpeed;
+    [SerializeField] private float _rotationSpeed;
     [SerializeField] private float _horizontalMultiplier;
 
     private Rigidbody _rigidbody;
@@ -67,7 +68,10 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        Vector3 target = transform.position + Vector3.forward * _verticalSpeed * Time.deltaTime + Vector3.right * _horizontalDifference;//new Vector3(_horizontalDifference, 0, 0)
-        _rigidbody.MovePosition(target);
+        Vector3 difference = Vector3.forward * _verticalSpeed * Time.deltaTime + Vector3.right * _horizontalDifference;
+        Vector3 targetPosition = transform.position + difference;
+        Quaternion targetRotation = Quaternion.LookRotation(difference);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+        _rigidbody.MovePosition(targetPosition);
     }
 }
