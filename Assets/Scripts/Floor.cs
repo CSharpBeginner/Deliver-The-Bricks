@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,9 +6,6 @@ public class Floor
     private Vector2Int _basis;
     private Place[] _places;
     private Vector2 _rectangle;
-    //private int _emptyPlaces;
-
-    //public Action Emptied;
 
     public IReadOnlyList<Place> Places => _places;
 
@@ -17,41 +13,7 @@ public class Floor
     {
         _basis = basis;
         Create(number, elementScale);
-        //_emptyPlaces = _places.Length;
-        //Subsribe();
     }
-
-    //private void Subsribe()
-    //{
-    //    foreach (Place place in _places)
-    //    {
-    //        place.Emptied += Free;
-    //        place.Filled += Fill;
-    //    }
-    //}
-
-    //private void Free()
-    //{
-    //    _emptyPlaces++;
-
-    //    if (_emptyPlaces == _places.Length)
-    //    {
-    //        Emptied?.Invoke();
-    //    }
-    //}
-
-    //private void Fill()
-    //{
-    //    _emptyPlaces--;
-    //}
-
-    //public void Fall()
-    //{
-    //    foreach (Place place in _places)
-    //    {
-    //        place.Fall();
-    //    }
-    //}
 
     private Vector2 Calculate(Vector3 elementScale)
     {
@@ -105,18 +67,5 @@ public class Floor
             _places[counter] = place;
             counter++;
         }
-    }
-
-    public bool IsEmpty()
-    {
-        foreach (Place place in _places)
-        {
-            if (place != null)
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

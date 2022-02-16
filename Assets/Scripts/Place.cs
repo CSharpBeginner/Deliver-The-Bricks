@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class Place
@@ -6,10 +5,6 @@ public class Place
     private Vector3 _position;
     private Quaternion _rotation;
     private Brick _brick;
-    //private bool _isAvailable;
-
-    //public Action Filled;
-    //public Action Emptied;
 
     public Brick Brick => _brick;
     public Vector3 Position => _position;
@@ -25,22 +20,11 @@ public class Place
     {
         _brick = brick;
         _brick.Collide += Free;
-        //Filled?.Invoke();
     }
 
-    private void Free()
+    public void Free()
     {
         _brick.Collide -= Free;//!!!Необходимо гарантировать отписку! В деструкторе?
         _brick = null;
-        //Emptied?.Invoke();
-        //_isAvailable = true;
     }
-
-    //public void Fall()
-    //{
-    //    if (_brick != null)
-    //    {
-    //        _brick.Fall();
-    //    }
-    //}
 }
