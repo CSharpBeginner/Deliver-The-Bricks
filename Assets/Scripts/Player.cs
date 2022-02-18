@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float _verticalSpeed;
     [SerializeField] private float _rotationSpeed;
     [SerializeField] private float _horizontalMultiplier;
+    [SerializeField] private GameObject _road;
 
     private Rigidbody _rigidbody;
     private Coroutine _currentCoroutine;
@@ -31,6 +32,16 @@ public class Player : MonoBehaviour
     {
         _inputer.TouchStarted -= RememberPositionX;
         _inputer.NormalizedDifferenceChanged -= OnNormalizedDifferenceChanged;
+    }
+
+    public void ActivateRoad()
+    {
+        _road.SetActive(true);
+    }
+
+    public void DeactivateRoad()
+    {
+        _road.SetActive(false);
     }
 
     private void RememberPositionX()

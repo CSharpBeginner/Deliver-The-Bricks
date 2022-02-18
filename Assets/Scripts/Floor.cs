@@ -68,4 +68,17 @@ public class Floor
             counter++;
         }
     }
+
+    public bool IsEmpty()
+    {
+        foreach (Place place in _places)
+        {
+            if (place != null)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

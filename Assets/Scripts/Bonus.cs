@@ -1,18 +1,24 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Bonus : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    [SerializeField] private int _count;
+    private TMP_Text _text;
+
+    private void Awake()
     {
-        
+        _text = GetComponentInChildren<TMP_Text>();
+        _text.text = _count.ToString();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnTriggerEnter(Collider other)
     {
-        
+        if (other.TryGetComponent<Player>(out Player player))
+        {
+            Container container = other.GetComponentInChildren<Container>();
+            container.Fill(_count);
+            Destroy(gameObject);
+        }
     }
 }

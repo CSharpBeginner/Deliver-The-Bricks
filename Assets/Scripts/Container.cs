@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -13,51 +14,39 @@ public class Container : MonoBehaviour
     private List<Floor> _floors;
     private BoxCollider _boxCollider;
     private bool _isTwoPlacesBelow = true;
-    //private List<Brick> _fallingBricks;
     private List<Place> _endPlaces;
 
     private void Awake()
     {
-        //_fallingBricks = new List<Brick>();
         _endPlaces = new List<Place>();
         _floors = new List<Floor>();
         _placesInFloor = (_basis.x + _basis.y) * 2;
         _boxCollider = GetComponent<BoxCollider>();
         //не забудь убрать число 3 из следующей строки
-        _boxCollider.size = new Vector3(_prefab.transform.localScale.x * _basis.x + _prefab.transform.localScale.z, _height, _prefab.transform.localScale.z * _basis.y + _prefab.transform.localScale.x + 3);
+        _boxCollider.size = new Vector3(_prefab.transform.localScale.x * _basis.x + _prefab.transform.localScale.z, _height, _prefab.transform.localScale.z * _basis.y + _prefab.transform.localScale.x);
     }
 
-    private void Start()
+    private void CreateRoad()
     {
-        int count = 120;
-        int startFloor = _floors.Count;
-        Fill(count);
-        StartCoroutine(Filling(startFloor, count));
+        //Установить таргет позишн и ротатион(из update) - из игрока - центральной точки
+        //А вокруг спавнить кирпичи
+        //Переместить первый кирпич с последнего этажа
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
         {
-            //GetAll();
             TryFall();
-            //GetAll();
+            DeleteEmptyFloors();
         }
     }
 
-    private void GetAll()
+    private void DeleteEmptyFloors()
     {
-        for (int i = 0; i < _floors.Count; i++)
+        while (_floors[_floors.Count - 1].IsEmpty())
         {
-            Debug.Log(i + "floor");
-            for (int j = 0; j < _placesInFloor; j++)
-            {
-                if (_floors[i].Places[j].Brick == null)
-                {
-                    Debug.Log(j + "null");
-                }
-                Debug.Log(j + " " + _floors[i].Places[j].Position);
-            }
+            _floors.Remove(_floors[_floors.Count - 1]);
         }
     }
 
@@ -154,10 +143,7 @@ public class Container : MonoBehaviour
 
                     if (startPlace != previousPlace)
                     {
-                        //_fallingBricks.Add(startPlace.Brick);
-                        _endPlaces.Add(previousPlace);//нужно только конечное место
-                        //освободить startPlace
-                        //заполнить previousPlace - нет заполнить я не могу
+                        _endPlaces.Add(previousPlace);
                     }
 
                     newPlaces[j] = previousPlace;
@@ -194,16 +180,18 @@ public class Container : MonoBehaviour
         }
     }
 
-    private void Fill(int count)
+    public void Fill(int count)
     {
         int floorsCount = (count - 1) / _placesInFloor + 1;
-        int startValue = _floors.Count;
+        int startIndex = _floors.Count;
 
-        for (int i = startValue; i < startValue + floorsCount; i++)
+        for (int i = startIndex; i < startIndex + floorsCount; i++)
         {
             Floor floor = new Floor(_basis, i, _prefab.transform.localScale);
             _floors.Add(floor);
         }
+
+        StartCoroutine(Filling(startIndex, count));
     }
 
     private IEnumerator Filling(int startFloor, int count)
