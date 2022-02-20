@@ -73,7 +73,7 @@ public class Floor
     {
         foreach (Place place in _places)
         {
-            if (place != null)
+            if (place.Brick != null)
             {
                 return false;
             }

@@ -18,6 +18,12 @@ public class Place
 
     public void SetBrick(Brick brick)
     {
+        if (_brick != null)
+        {
+            Debug.Log("not Free");
+            Free();
+        }
+
         _brick = brick;
         _brick.Collide += Free;
     }
@@ -26,5 +32,13 @@ public class Place
     {
         _brick.Collide -= Free;//!!!Необходимо гарантировать отписку! В деструкторе?
         _brick = null;
+    }
+
+    ~Place()
+    {
+        if (_brick != null)
+        {
+            Free();
+        }
     }
 }

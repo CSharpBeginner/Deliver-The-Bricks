@@ -5,20 +5,20 @@ using UnityEngine;
 
 public class Container : MonoBehaviour
 {
+    [SerializeField] private float _timeBetweenFilling;//0.01
+    [SerializeField] private float _timeBetweenFalling;//0.01
     [SerializeField] private Brick _prefab;
     [SerializeField] private Vector2Int _basis;
     [SerializeField] private int _height;//как вариант переместить в базис
-    [SerializeField] private float _waitingTime;
+    [SerializeField] private Pool _pool;
 
     private int _placesInFloor;
     private List<Floor> _floors;
     private BoxCollider _boxCollider;
     private bool _isTwoPlacesBelow = true;
-    private List<Place> _endPlaces;
 
     private void Awake()
     {
-        _endPlaces = new List<Place>();
         _floors = new List<Floor>();
         _placesInFloor = (_basis.x + _basis.y) * 2;
         _boxCollider = GetComponent<BoxCollider>();
@@ -37,34 +37,18 @@ public class Container : MonoBehaviour
     {
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
         {
-            TryFall();
+            Queue<Place> newFillingPlaces = GetNewFillingPlaces();
             DeleteEmptyFloors();
+            StartCoroutine(Falling(newFillingPlaces));
         }
     }
 
     private void DeleteEmptyFloors()
     {
-        while (_floors[_floors.Count - 1].IsEmpty())
+        while (_floors.Count != 0 && _floors[_floors.Count - 1].IsEmpty())
         {
             _floors.Remove(_floors[_floors.Count - 1]);
         }
-    }
-
-    private Place GetEndPlace(Place currentPlace, Place firstPlaceBelow, Place secondPlaceBelow)
-    {
-        Place endPlace = currentPlace;
-
-        if (firstPlaceBelow.Brick == null && secondPlaceBelow.Brick == null)
-        {
-            endPlace = firstPlaceBelow;
-            _isTwoPlacesBelow = false;
-        }
-        else
-        {
-            _isTwoPlacesBelow = true;
-        }
-
-        return endPlace;
     }
 
     private int GetIndexInCyclicArray(int length, int outingOfRangeIndex)
@@ -79,10 +63,25 @@ public class Container : MonoBehaviour
         }
     }
 
-    private Place GetEndPlace(int floorNumber, int placeNumber, Place current)
+    private bool TryFindPlaceBelow(Place firstPlaceBelow, Place secondPlaceBelow, out Place placeBelow)
     {
-        Place end = current;
+        if (firstPlaceBelow.Brick == null && secondPlaceBelow.Brick == null)
+        {
+            _isTwoPlacesBelow = false;
+            placeBelow = firstPlaceBelow;
+            return true;
+        }
+        else
+        {
+            _isTwoPlacesBelow = true;
+            placeBelow = null;
+            return false;
+        }
+    }
 
+    private bool TryFindPlaceBelow(int floorNumber, int placeNumber, out Place placeBelow)//необходимо (относительный) тип этажа (в моем случае всего 2 типа этажа с поочередным расположением, так что можно забить )
+                                                                                          //сам этаж, чтобы только получить нужное место по определенной логике  
+    {
         if (_isTwoPlacesBelow)
         {
             Place firstPlace;
@@ -99,83 +98,100 @@ public class Container : MonoBehaviour
                 secondPlace = _floors[floorNumber].Places[GetIndexInCyclicArray(_floors[floorNumber].Places.Count, placeNumber - _basis.y + 1)];
             }
 
-            end = GetEndPlace(current, firstPlace, secondPlace);
+            return TryFindPlaceBelow(firstPlace, secondPlace, out placeBelow);
         }
         else
         {
+            _isTwoPlacesBelow = true;
+
             if (_floors[floorNumber].Places[placeNumber].Brick == null)
             {
-                end = _floors[floorNumber].Places[placeNumber];
+                placeBelow = _floors[floorNumber].Places[placeNumber];
+                return true;
             }
-
-            _isTwoPlacesBelow = true;
+            else
+            {
+                placeBelow = null;
+                return false;
+            }
         }
-
-        return end;
     }
 
-    private void TryFall()//TryGetEmptyFloorNumber //Думай над переписыванием именно этого метода!
+    private Queue<Place> GetNewFillingPlaces()
     {
+        Queue<Place> newFillingPlaces = new Queue<Place>();
+
         for (int i = 1; i < _floors.Count; i++)
         {
-            Place[] newPlaces = new Place[_placesInFloor];
+            Stack<Place> places = new Stack<Place>();
+            Stack<Brick> bricks = new Stack<Brick>();
 
             for (int j = 0; j < _floors[i].Places.Count; j++)
             {
-                if (_floors[i].Places[j].Brick != null)
+                Place currentPlace = _floors[i].Places[j];
+
+                if (currentPlace.Brick != null)
                 {
-                    Place startPlace = _floors[i].Places[j];
-                    Place previousPlace = _floors[i].Places[j];
+                    Place newFillingPlace = null;
 
                     for (int k = i - 1; k >= 0; k--)
                     {
-                        Place endPlace = GetEndPlace(k, j, previousPlace);
-
-                        if (endPlace == previousPlace)
+                        if (TryFindPlaceBelow(k, j, out Place placeBelow))
                         {
-                            break;
+                            newFillingPlace = placeBelow;
                         }
                         else
                         {
-                            previousPlace = endPlace;
+                            break;
                         }
                     }
 
-                    if (startPlace != previousPlace)
+                    if (newFillingPlace != null)
                     {
-                        _endPlaces.Add(previousPlace);
-                    }
+                        if (newFillingPlace.Brick != null)
+                        {
+                            Debug.Log("TryFindPlaceBelow has a trouble");
+                        }
 
-                    newPlaces[j] = previousPlace;
+                        places.Push(newFillingPlace);
+                        bricks.Push(currentPlace.Brick);
+                        currentPlace.Free();
+                        newFillingPlaces.Enqueue(newFillingPlace);
+                    }
                 }
             }
 
-            FallFloor(_floors[i], newPlaces);
+            FillPlaces(bricks, places);
         }
 
-        StartCoroutine(Falling());
+        return newFillingPlaces;
     }
 
-    private void FallFloor(Floor floor, Place[] newPlaces)
+    private void FillPlaces(Stack<Brick> bricks, Stack<Place> newPlaces)
     {
-        for (int j = 0; j < floor.Places.Count; j++)
+        while (newPlaces.Count != 0)
         {
-            if (floor.Places[j].Brick != null)
+            Place place = newPlaces.Pop();
+            Brick brick = bricks.Pop();
+            if (place.Brick != null)
             {
-                Brick brick = floor.Places[j].Brick;
-                floor.Places[j].Free();
-                newPlaces[j].SetBrick(brick);
+                Debug.Log("Place have been already filled. How?");
             }
+            place.SetBrick(brick);//brick Не null, но при выполнении функции brick=null
         }
     }
 
-    private IEnumerator Falling()
+    private IEnumerator Falling(Queue<Place> endPlaces)
     {
-        var waiting = new WaitForSeconds(_waitingTime);
+        var waiting = new WaitForSeconds(_timeBetweenFalling);
 
-        foreach (Place place in _endPlaces)
+        foreach (Place place in endPlaces)
         {
-            place.Brick.Fall(place.Position, place.Rotation);
+            if (place.Brick != null)
+            {
+                place.Brick.Fall(place.Position, place.Rotation);
+            }
+
             yield return waiting;
         }
     }
@@ -184,39 +200,43 @@ public class Container : MonoBehaviour
     {
         int floorsCount = (count - 1) / _placesInFloor + 1;
         int startIndex = _floors.Count;
+        Queue<Brick> bricks = new Queue<Brick>(count);
 
         for (int i = startIndex; i < startIndex + floorsCount; i++)
         {
             Floor floor = new Floor(_basis, i, _prefab.transform.localScale);
             _floors.Add(floor);
-        }
 
-        StartCoroutine(Filling(startIndex, count));
-    }
-
-    private IEnumerator Filling(int startFloor, int count)
-    {
-        var waiting = new WaitForSeconds(0.02f);
-
-        for (int i = startFloor; i < _floors.Count; i++)
-        {
             for (int j = 0; j < _placesInFloor; j++)
             {
                 if (count != 0)
                 {
-                    Brick newBrick = Instantiate(_prefab, transform);
-                    newBrick.transform.rotation = _floors[i].Places[j].Rotation;
-                    newBrick.transform.localPosition = _floors[i].Places[j].Position;
-                    _floors[i].Places[j].SetBrick(newBrick);
+                    Brick brick = Instantiate(_prefab, transform);
+                    floor.Places[j].SetBrick(brick);
+                    brick.transform.localRotation = floor.Places[j].Rotation;
+                    brick.transform.localPosition = floor.Places[j].Position;
+                    bricks.Enqueue(brick);
                     count--;
                 }
                 else
                 {
                     break;
                 }
-
-                yield return waiting;
             }
+        }
+
+        StartCoroutine(Filling(bricks));
+    }
+
+    private IEnumerator Filling(Queue<Brick> bricks)
+    {
+        var waiting = new WaitForSeconds(_timeBetweenFilling);
+
+        while (bricks.Count != 0)
+        {
+            Brick brick = bricks.Dequeue();
+            brick.gameObject.SetActive(true);
+            yield return waiting;
         }
     }
 }

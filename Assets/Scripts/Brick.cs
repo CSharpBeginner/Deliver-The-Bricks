@@ -21,6 +21,11 @@ public class Brick : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
     }
 
+    //private void OnDisable()
+    //{
+    //    Collide?.Invoke();
+    //}
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
@@ -28,13 +33,14 @@ public class Brick : MonoBehaviour
             _boxCollider.isTrigger = false;
             _rigidbody.useGravity = true;
             _rigidbody.isKinematic = false;
-            //transform.SetParent(obstacle.transform);
+            transform.SetParent(obstacle.transform);
             Collide?.Invoke();
         }
     }
 
     public void Fall(Vector3 targetPosition, Quaternion targetRotation)
     {
+        gameObject.SetActive(true);
         StartCoroutine(Falling(targetPosition, targetRotation));
     }
 
