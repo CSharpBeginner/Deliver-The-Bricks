@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,14 +14,12 @@ public class Container : MonoBehaviour
     private int _placesInFloor;
     private List<Floor> _floors;
     private BoxCollider _boxCollider;
-    private bool _isTwoPlacesBelow = true;
 
     private void Awake()
     {
         _floors = new List<Floor>();
         _placesInFloor = (_basis.x + _basis.y) * 2;
         _boxCollider = GetComponent<BoxCollider>();
-        //не забудь убрать число 3 из следующей строки
         _boxCollider.size = new Vector3(_prefab.transform.localScale.x * _basis.x + _prefab.transform.localScale.z, _height, _prefab.transform.localScale.z * _basis.y + _prefab.transform.localScale.x);
     }
 
@@ -37,9 +34,10 @@ public class Container : MonoBehaviour
     {
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
         {
+            //добавить cooldown, чтобы метод гарантировано запускался только один раз
             Queue<Place> newFillingPlaces = GetNewFillingPlaces();
             DeleteEmptyFloors();
-            StartCoroutine(Falling(newFillingPlaces));
+            StartCoroutine(Falling(newFillingPlaces));//добавить задержку
         }
     }
 
@@ -67,46 +65,42 @@ public class Container : MonoBehaviour
     {
         if (firstPlaceBelow.Brick == null && secondPlaceBelow.Brick == null)
         {
-            _isTwoPlacesBelow = false;
             placeBelow = firstPlaceBelow;
             return true;
         }
         else
         {
-            _isTwoPlacesBelow = true;
             placeBelow = null;
             return false;
         }
     }
 
-    private bool TryFindPlaceBelow(int floorNumber, int placeNumber, out Place placeBelow)//необходимо (относительный) тип этажа (в моем случае всего 2 типа этажа с поочередным расположением, так что можно забить )
-                                                                                          //сам этаж, чтобы только получить нужное место по определенной логике  
+    private bool TryFindPlaceBelow(int fallingFloorNumber, int checkingFloorNumber, int placeNumber, out Place placeBelow)//необходимо (относительный) тип этажа (в моем случае всего 2 типа этажа с поочередным расположением, так что можно забить )
+                                                                                                                          //сам этаж, чтобы только получить нужное место по определенной логике  
     {
-        if (_isTwoPlacesBelow)
+        if ((fallingFloorNumber - checkingFloorNumber) % 2 == 1)
         {
             Place firstPlace;
             Place secondPlace;
 
-            if (floorNumber % 2 == 0)//Лучше, конечно создать тип этажа
+            if (checkingFloorNumber % 2 == 0)//Лучше, конечно создать тип этажа
             {
-                firstPlace = _floors[floorNumber].Places[GetIndexInCyclicArray(_floors[floorNumber].Places.Count, placeNumber + _basis.y)];
-                secondPlace = _floors[floorNumber].Places[GetIndexInCyclicArray(_floors[floorNumber].Places.Count, placeNumber + _basis.y - 1)];
+                firstPlace = _floors[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors[checkingFloorNumber].Places.Count, placeNumber + _basis.y)];
+                secondPlace = _floors[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors[checkingFloorNumber].Places.Count, placeNumber + _basis.y - 1)];
             }
             else
             {
-                firstPlace = _floors[floorNumber].Places[GetIndexInCyclicArray(_floors[floorNumber].Places.Count, placeNumber - _basis.y)];
-                secondPlace = _floors[floorNumber].Places[GetIndexInCyclicArray(_floors[floorNumber].Places.Count, placeNumber - _basis.y + 1)];
+                firstPlace = _floors[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors[checkingFloorNumber].Places.Count, placeNumber - _basis.y)];
+                secondPlace = _floors[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors[checkingFloorNumber].Places.Count, placeNumber - _basis.y + 1)];
             }
 
             return TryFindPlaceBelow(firstPlace, secondPlace, out placeBelow);
         }
         else
         {
-            _isTwoPlacesBelow = true;
-
-            if (_floors[floorNumber].Places[placeNumber].Brick == null)
+            if (_floors[checkingFloorNumber].Places[placeNumber].Brick == null)
             {
-                placeBelow = _floors[floorNumber].Places[placeNumber];
+                placeBelow = _floors[checkingFloorNumber].Places[placeNumber];
                 return true;
             }
             else
@@ -136,7 +130,7 @@ public class Container : MonoBehaviour
 
                     for (int k = i - 1; k >= 0; k--)
                     {
-                        if (TryFindPlaceBelow(k, j, out Place placeBelow))
+                        if (TryFindPlaceBelow(i, k, j, out Place placeBelow))
                         {
                             newFillingPlace = placeBelow;
                         }
