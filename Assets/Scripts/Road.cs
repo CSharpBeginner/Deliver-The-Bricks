@@ -63,19 +63,12 @@ public class Road : MonoBehaviour
         }
     }
 
-    private Vector3 CalculateTranslation(Vector3 position)
+    private float Calculate(Vector3 position)
     {
-        float angle = Vector3.Angle(Vector3.left, _lastPosition - position);
-        Debug.Log("angle" + angle);
-        if (angle > 90)
-        {
-            angle -= 90;
-        }
-
-        float hipotenus = _prefab.transform.localScale.z / 2 / Mathf.Cos(angle);
-        float distance = hipotenus * (90 - _lastRotation.eulerAngles.y) / 90;
-        Vector3 direction = (_lastPosition - position).normalized;
-        return direction * distance;
+        float normalDistance = Mathf.Abs(position.x - _builder2.transform.position.x);
+        float currentDistance = normalDistance / Mathf.Cos(Mathf.Deg2Rad * _lastRotation.eulerAngles.y);
+        float difference = currentDistance - normalDistance;
+        return difference;
     }
 
     private void Spawn(Vector3Int gridPositon)
@@ -83,19 +76,12 @@ public class Road : MonoBehaviour
         Vector3 temp = _grid.GridToWorldPosition(gridPositon);
         Quaternion rotation = _lastRotation * _rightRotation;
         Vector3 position = _startPosition + temp;
-        Debug.Log("_lastRotation" + _lastRotation.eulerAngles.y);
-        Vector3 translation = (position - _lastPosition) * Mathf.Cos(Mathf.Deg2Rad * (90 - _lastRotation.eulerAngles.y));
-        Debug.Log("_lastRotation" + _lastRotation.eulerAngles.y + "translation" + translation + "Cos" + Mathf.Cos(Mathf.Deg2Rad * (90 - _lastRotation.eulerAngles.y)));
-        position -= translation;
-
-        //Debug.Log("original position" + position);
-        //Vector3 translation = CalculateTranslation(position);
-        //position += translation;
-        //Debug.Log("modifiyed position" + position);
-
         Brick brick = Instantiate(_prefab);
         brick.transform.position = position;
         brick.transform.rotation = rotation;
+        Vector3 direction = brick.transform.right;
+        float distance = Calculate(position);
+        brick.transform.position -= direction * distance;
         brick.gameObject.SetActive(true);
     }
 }

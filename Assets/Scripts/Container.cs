@@ -23,13 +23,6 @@ public class Container : MonoBehaviour
         _boxCollider.size = new Vector3(_prefab.transform.localScale.x * _basis.x + _prefab.transform.localScale.z, _height, _prefab.transform.localScale.z * _basis.y + _prefab.transform.localScale.x);
     }
 
-    private void CreateRoad()
-    {
-        //Установить таргет позишн и ротатион(из update) - из игрока - центральной точки
-        //А вокруг спавнить кирпичи
-        //Переместить первый кирпич с последнего этажа
-    }
-
     private void OnTriggerExit(Collider other)
     {
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
