@@ -14,6 +14,7 @@ public class Container : MonoBehaviour
     private int _placesInFloor;
     private List<Floor> _floors;
     private BoxCollider _boxCollider;
+    //private FloorType[] _floorTypes;
 
     private void Awake()
     {
@@ -21,6 +22,9 @@ public class Container : MonoBehaviour
         _placesInFloor = (_basis.x + _basis.y) * 2;
         _boxCollider = GetComponent<BoxCollider>();
         _boxCollider.size = new Vector3(_prefab.transform.localScale.x * _basis.x + _prefab.transform.localScale.z, _height, _prefab.transform.localScale.z * _basis.y + _prefab.transform.localScale.x);
+        //_floorTypes = new FloorType[2];
+        //_floorTypes[0] = new FloorType(_basis, Rectangle.Corner.LeftBottom, false);
+        //_floorTypes[1] = new FloorType(_basis, Rectangle.Corner.LeftTop, true);
     }
 
     private void OnTriggerExit(Collider other)

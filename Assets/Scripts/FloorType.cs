@@ -5,22 +5,23 @@ using UnityEngine;
 public class FloorType
 {
     private Vector2Int _basis;
-    private Corner _startFrom;
+    private Rectangle.Corner _startFrom;
     //private bool _isClockwise;
     private bool _hasBrickBefore;
 
     public Vector2Int Basis => _basis;
-    public Corner StartCorner => _startFrom;
+    public Rectangle.Corner StartCorner => _startFrom;
     public bool HasBrickBefore => _hasBrickBefore;
+    public int PlacesCount => (_basis.x + _basis.y) * 2;
 
-    public FloorType(Vector2Int basis, Corner startFrom, bool hasBrickBefore)
+    public FloorType(Vector2Int basis, Rectangle.Corner startFrom, bool hasBrickBefore)
     {
         _basis = basis;
         _startFrom = startFrom;
         _hasBrickBefore = hasBrickBefore;
     }
 
-    public enum Corner
+    /*public enum Corner
     {
         LeftTop = 0,
         LeftBottom = 1,
@@ -66,5 +67,5 @@ public class FloorType
         }
 
         return -FloorType.GetCornerCoordinate(corner, result);
-    }
+    }*/
 }

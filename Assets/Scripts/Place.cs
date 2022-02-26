@@ -30,7 +30,7 @@ public class Place
 
     public void Free()
     {
-        _brick.Collide -= Free;//!!!Необходимо гарантировать отписку! В деструкторе?
+        _brick.Collide -= Free;
         _brick = null;
     }
 

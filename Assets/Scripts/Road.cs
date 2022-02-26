@@ -65,7 +65,7 @@ public class Road : MonoBehaviour
 
     private float Calculate(Vector3 position)
     {
-        float normalDistance = Mathf.Abs(position.x - _builder2.transform.position.x);
+        float normalDistance = Mathf.Abs(position.x - _lastPosition.x);
         float currentDistance = normalDistance / Mathf.Cos(Mathf.Deg2Rad * _lastRotation.eulerAngles.y);
         float difference = currentDistance - normalDistance;
         return difference;
@@ -81,7 +81,7 @@ public class Road : MonoBehaviour
         brick.transform.rotation = rotation;
         Vector3 direction = brick.transform.right;
         float distance = Calculate(position);
-        brick.transform.position -= direction * distance;
+        //brick.transform.position -= direction * distance;
         brick.gameObject.SetActive(true);
     }
 }

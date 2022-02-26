@@ -40,11 +40,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FoamTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 2a2d71ee416d3c844adfa1a053ea32f4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 5b25648cd280d084cb2eb67bca0d45fe, type: 3}
+        m_Texture: {fileID: 2800000, guid: fffa7a9f529857841be5a17e0b4c824f, type: 3}
         m_Scale: {x: 2, y: 2}
         m_Offset: {x: 0, y: 0}
     - _Mask1:
@@ -86,9 +86,9 @@ Material:
     - _DstBlendTCP2: 10
     - _EmisPulseMin: 0
     - _EmisPulseSpeed: 2
-    - _FoamSmooth: 0.02
-    - _FoamSpread: 2
-    - _FoamStrength: 0.8
+    - _FoamSmooth: 0.17
+    - _FoamSpread: 4.9
+    - _FoamStrength: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -101,8 +101,8 @@ Material:
     - _RampThreshold: 0.5
     - _ReflRoughness: 0
     - _ReflStrength: 1
-    - _RimMax: 0.23
-    - _RimMin: 0.87
+    - _RimMax: 0.88
+    - _RimMin: 0.09
     - _Shininess: 0.1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -119,14 +119,14 @@ Material:
     - __dummy__: 0
     m_Colors:
     - _BumpSpeed: {r: 0.2, g: 0.2, b: 0.3, a: 0.3}
-    - _Color: {r: 0.045122836, g: 0.59583694, b: 0.735849, a: 1}
-    - _DepthColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _Color: {r: 0.06445098, g: 0.66486275, b: 0.865, a: 1}
+    - _DepthColor: {r: 0.686, g: 0.686, b: 0.686, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FoamColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
-    - _FoamSpeed: {r: 2, g: 2, b: 2, a: 2}
+    - _FoamSpeed: {r: 0.5, g: 0.5, b: 0, a: 0.2}
     - _HColor: {r: 0.6415094, g: 0.6415094, b: 0.6415094, a: 1}
     - _MaskedColor: {r: 1, g: 0, b: 0, a: 1}
-    - _RimColor: {r: 0.371, g: 0.371, b: 0.371, a: 0.4862745}
-    - _SColor: {r: 0.3, g: 0.3, b: 0.3, a: 1}
+    - _RimColor: {r: 0.161, g: 0.161, b: 0.161, a: 0.59607846}
+    - _SColor: {r: 0.404, g: 0.404, b: 0.404, a: 1}
     - _SpecColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_BuildTextureStacks: []
