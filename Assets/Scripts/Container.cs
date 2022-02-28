@@ -6,25 +6,21 @@ public class Container : MonoBehaviour
 {
     [SerializeField] private float _timeBetweenFilling;//0.01
     [SerializeField] private float _timeBetweenFalling;//0.01
-    [SerializeField] private Brick _prefab;
+    [SerializeField] private Brick _brick;
+    [SerializeField] private Floor3[] _floorTypes;
     [SerializeField] private Vector2Int _basis;
     [SerializeField] private int _height;//как вариант переместить в базис
     [SerializeField] private Pool _pool;
+    [SerializeField] private float _offset;
 
-    private int _placesInFloor;
-    private List<Floor> _floors;
+    private List<Floor3> _floors3;
     private BoxCollider _boxCollider;
-    //private FloorType[] _floorTypes;
 
     private void Awake()
     {
-        _floors = new List<Floor>();
-        _placesInFloor = (_basis.x + _basis.y) * 2;
+        _floors3 = new List<Floor3>();
         _boxCollider = GetComponent<BoxCollider>();
-        _boxCollider.size = new Vector3(_prefab.transform.localScale.x * _basis.x + _prefab.transform.localScale.z, _height, _prefab.transform.localScale.z * _basis.y + _prefab.transform.localScale.x);
-        //_floorTypes = new FloorType[2];
-        //_floorTypes[0] = new FloorType(_basis, Rectangle.Corner.LeftBottom, false);
-        //_floorTypes[1] = new FloorType(_basis, Rectangle.Corner.LeftTop, true);
+        _boxCollider.size = new Vector3(_brick.transform.localScale.x * _basis.x + _brick.transform.localScale.z, _height, _brick.transform.localScale.z * _basis.y + _brick.transform.localScale.x);
     }
 
     private void OnTriggerExit(Collider other)
@@ -32,7 +28,7 @@ public class Container : MonoBehaviour
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
         {
             //добавить cooldown, чтобы метод гарантировано запускался только один раз
-            Queue<Place> newFillingPlaces = GetNewFillingPlaces();
+            Queue<Place3> newFillingPlaces = GetNewFillingPlaces();
             DeleteEmptyFloors();
             StartCoroutine(Falling(newFillingPlaces));//добавить задержку
         }
@@ -40,9 +36,11 @@ public class Container : MonoBehaviour
 
     private void DeleteEmptyFloors()
     {
-        while (_floors.Count != 0 && _floors[_floors.Count - 1].IsEmpty())
+        while (_floors3.Count != 0 && _floors3[_floors3.Count - 1].IsEmpty())
         {
-            _floors.Remove(_floors[_floors.Count - 1]);
+            Floor3 floor = _floors3[_floors3.Count - 1];
+            _floors3.Remove(floor);
+            Destroy(floor);
         }
     }
 
@@ -58,7 +56,7 @@ public class Container : MonoBehaviour
         }
     }
 
-    private bool TryFindPlaceBelow(Place firstPlaceBelow, Place secondPlaceBelow, out Place placeBelow)
+    private bool TryFindPlaceBelow(Place3 firstPlaceBelow, Place3 secondPlaceBelow, out Place3 placeBelow)
     {
         if (firstPlaceBelow.Brick == null && secondPlaceBelow.Brick == null)
         {
@@ -72,32 +70,32 @@ public class Container : MonoBehaviour
         }
     }
 
-    private bool TryFindPlaceBelow(int fallingFloorNumber, int checkingFloorNumber, int placeNumber, out Place placeBelow)//необходимо (относительный) тип этажа (в моем случае всего 2 типа этажа с поочередным расположением, так что можно забить )
-                                                                                                                          //сам этаж, чтобы только получить нужное место по определенной логике  
+    private bool TryFindPlaceBelow(int fallingFloorNumber, int checkingFloorNumber, int placeNumber, out Place3 placeBelow)//необходимо (относительный) тип этажа (в моем случае всего 2 типа этажа с поочередным расположением, так что можно забить )
+                                                                                                                           //сам этаж, чтобы только получить нужное место по определенной логике  
     {
-        if ((fallingFloorNumber - checkingFloorNumber) % 2 == 1)
+        if ((fallingFloorNumber - checkingFloorNumber) % 2 == 1)//переделать
         {
-            Place firstPlace;
-            Place secondPlace;
+            Place3 firstPlace;
+            Place3 secondPlace;
 
             if (checkingFloorNumber % 2 == 0)//Лучше, конечно создать тип этажа
             {
-                firstPlace = _floors[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors[checkingFloorNumber].Places.Count, placeNumber + _basis.y)];
-                secondPlace = _floors[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors[checkingFloorNumber].Places.Count, placeNumber + _basis.y - 1)];
+                firstPlace = _floors3[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors3[checkingFloorNumber].Places.Count, placeNumber + _basis.y)];
+                secondPlace = _floors3[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors3[checkingFloorNumber].Places.Count, placeNumber + _basis.y - 1)];
             }
             else
             {
-                firstPlace = _floors[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors[checkingFloorNumber].Places.Count, placeNumber - _basis.y)];
-                secondPlace = _floors[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors[checkingFloorNumber].Places.Count, placeNumber - _basis.y + 1)];
+                firstPlace = _floors3[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors3[checkingFloorNumber].Places.Count, placeNumber - _basis.y)];
+                secondPlace = _floors3[checkingFloorNumber].Places[GetIndexInCyclicArray(_floors3[checkingFloorNumber].Places.Count, placeNumber - _basis.y + 1)];
             }
 
             return TryFindPlaceBelow(firstPlace, secondPlace, out placeBelow);
         }
         else
         {
-            if (_floors[checkingFloorNumber].Places[placeNumber].Brick == null)
+            if (_floors3[checkingFloorNumber].Places[placeNumber].Brick == null)
             {
-                placeBelow = _floors[checkingFloorNumber].Places[placeNumber];
+                placeBelow = _floors3[checkingFloorNumber].Places[placeNumber];
                 return true;
             }
             else
@@ -108,26 +106,26 @@ public class Container : MonoBehaviour
         }
     }
 
-    private Queue<Place> GetNewFillingPlaces()
+    private Queue<Place3> GetNewFillingPlaces()
     {
-        Queue<Place> newFillingPlaces = new Queue<Place>();
+        Queue<Place3> newFillingPlaces = new Queue<Place3>();
 
-        for (int i = 1; i < _floors.Count; i++)
+        for (int i = 1; i < _floors3.Count; i++)
         {
-            Stack<Place> places = new Stack<Place>();
+            Stack<Place3> places = new Stack<Place3>();
             Stack<Brick> bricks = new Stack<Brick>();
 
-            for (int j = 0; j < _floors[i].Places.Count; j++)
+            for (int j = 0; j < _floors3[i].Places.Count; j++)
             {
-                Place currentPlace = _floors[i].Places[j];
+                Place3 currentPlace = _floors3[i].Places[j];
 
                 if (currentPlace.Brick != null)
                 {
-                    Place newFillingPlace = null;
+                    Place3 newFillingPlace = null;
 
                     for (int k = i - 1; k >= 0; k--)
                     {
-                        if (TryFindPlaceBelow(i, k, j, out Place placeBelow))
+                        if (TryFindPlaceBelow(i, k, j, out Place3 placeBelow))
                         {
                             newFillingPlace = placeBelow;
                         }
@@ -158,29 +156,29 @@ public class Container : MonoBehaviour
         return newFillingPlaces;
     }
 
-    private void FillPlaces(Stack<Brick> bricks, Stack<Place> newPlaces)
+    private void FillPlaces(Stack<Brick> bricks, Stack<Place3> newPlaces)
     {
         while (newPlaces.Count != 0)
         {
-            Place place = newPlaces.Pop();
+            Place3 place = newPlaces.Pop();
             Brick brick = bricks.Pop();
             if (place.Brick != null)
             {
-                Debug.Log("Place have been already filled. How?");
+                Debug.Log("Place have been already filled");
             }
-            place.SetBrick(brick);//brick Не null, но при выполнении функции brick=null
+            place.SetBrick(brick);
         }
     }
 
-    private IEnumerator Falling(Queue<Place> endPlaces)
+    private IEnumerator Falling(Queue<Place3> endPlaces)
     {
         var waiting = new WaitForSeconds(_timeBetweenFalling);
 
-        foreach (Place place in endPlaces)
+        foreach (Place3 place in endPlaces)
         {
             if (place.Brick != null)
             {
-                place.Brick.Fall(place.Position, place.Rotation);
+                place.Brick.Fall(place.transform.position, place.transform.rotation);
             }
 
             yield return waiting;
@@ -189,30 +187,27 @@ public class Container : MonoBehaviour
 
     public void Fill(int count)
     {
-        int floorsCount = (count - 1) / _placesInFloor + 1;
-        int startIndex = _floors.Count;
+        int placesCount = 14;//magicNumber!!!!!!!
+        int floorsCount = (count - 1) / placesCount + 1;
+        int startIndex = _floors3.Count;
         Queue<Brick> bricks = new Queue<Brick>(count);
 
         for (int i = startIndex; i < startIndex + floorsCount; i++)
         {
-            Floor floor = new Floor(_basis, i, _prefab.transform.localScale);
-            _floors.Add(floor);
+            Floor3 currentFloor = _floorTypes[i % _floorTypes.Length];
+            Floor3 floor3 = Instantiate(currentFloor, transform);
+            _floors3.Add(floor3);
+            floor3.transform.localPosition = new Vector3(0, (_brick.transform.localScale.y + _offset) * i, 0);
+            int brickCountInFloor = Mathf.Clamp(count, 0, currentFloor.Places.Count);
+            count -= brickCountInFloor;
 
-            for (int j = 0; j < _placesInFloor; j++)
+            for (int j = 0; j < brickCountInFloor; j++)
             {
-                if (count != 0)
-                {
-                    Brick brick = Instantiate(_prefab, transform);
-                    floor.Places[j].SetBrick(brick);
-                    brick.transform.localRotation = floor.Places[j].Rotation;
-                    brick.transform.localPosition = floor.Places[j].Position;
-                    bricks.Enqueue(brick);
-                    count--;
-                }
-                else
-                {
-                    break;
-                }
+                Brick brick = Instantiate(_brick, floor3.transform);
+                brick.transform.rotation = floor3.Places[j].transform.rotation;
+                brick.transform.position = floor3.Places[j].transform.position;
+                floor3.Places[j].SetBrick(brick);
+                bricks.Enqueue(brick);
             }
         }
 
@@ -222,7 +217,6 @@ public class Container : MonoBehaviour
     private IEnumerator Filling(Queue<Brick> bricks)
     {
         var waiting = new WaitForSeconds(_timeBetweenFilling);
-
         while (bricks.Count != 0)
         {
             Brick brick = bricks.Dequeue();

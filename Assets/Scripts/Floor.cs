@@ -6,18 +6,20 @@ public class Floor
     private Vector2Int _basis;
     private Place[] _places;
     private Vector2 _rectangle;
+    private float _offset;
 
     public IReadOnlyList<Place> Places => _places;
 
-    public Floor(Vector2Int basis, int number, Vector3 elementScale)
+    public Floor(Vector2Int basis, int number, Vector3 elementScale, float offset)
     {
         _basis = basis;
+        _offset = offset;
         Create(number, elementScale);
     }
 
     private Vector2 Calculate(Vector3 elementScale)
     {
-        return new Vector2(elementScale.x * _basis.x + elementScale.z, elementScale.z * _basis.y + elementScale.x);
+        return new Vector2((elementScale.x + _offset) * _basis.x + elementScale.z, (elementScale.z + _offset) * _basis.y + elementScale.x);
     }
 
     private void Create(int number, Vector3 elementScale)
@@ -30,31 +32,31 @@ public class Floor
 
         if (number % 2 == 0)
         {
-            Vector3 startPosition = new Vector3((-_rectangle.x + elementScale.x) / 2, number * elementScale.y, (-_rectangle.y + elementScale.z) / 2);
-            SideCicle(startPosition, new Vector3(elementScale.x, 0, 0), Quaternion.identity, _basis.x, ref counter);
+            Vector3 startPosition = new Vector3((-_rectangle.x + elementScale.x) / 2, number * (elementScale.y + _offset), (-_rectangle.y + elementScale.z) / 2);
+            SideCicle(startPosition, new Vector3((elementScale.x + _offset), 0, 0), Quaternion.identity, _basis.x, ref counter);
 
-            Vector3 second = new Vector3((_rectangle.x - elementScale.z) / 2, number * elementScale.y, (-_rectangle.y + elementScale.x) / 2);
-            SideCicle(second, new Vector3(0, 0, elementScale.x), _rightRotation, _basis.y, ref counter);
+            Vector3 second = new Vector3((_rectangle.x - elementScale.z) / 2, number * (elementScale.y + _offset), (-_rectangle.y + elementScale.x) / 2);
+            SideCicle(second, new Vector3(0, 0, (elementScale.x + _offset)), _rightRotation, _basis.y, ref counter);
 
-            Vector3 third = new Vector3((_rectangle.x - elementScale.x) / 2, number * elementScale.y, (_rectangle.y - elementScale.z) / 2);
-            SideCicle(third, new Vector3(-elementScale.x, 0, 0), Quaternion.identity, _basis.x, ref counter);
+            Vector3 third = new Vector3((_rectangle.x - elementScale.x) / 2, number * (elementScale.y + _offset), (_rectangle.y - elementScale.z) / 2);
+            SideCicle(third, new Vector3(-(elementScale.x + _offset), 0, 0), Quaternion.identity, _basis.x, ref counter);
 
-            Vector3 fourth = new Vector3((-_rectangle.x + elementScale.z) / 2, number * elementScale.y, (_rectangle.y - elementScale.x) / 2);
-            SideCicle(fourth, new Vector3(0, 0, -elementScale.x), _rightRotation, _basis.y, ref counter);
+            Vector3 fourth = new Vector3((-_rectangle.x + elementScale.z) / 2, number * (elementScale.y + _offset), (_rectangle.y - elementScale.x) / 2);
+            SideCicle(fourth, new Vector3(0, 0, -(elementScale.x + _offset)), _rightRotation, _basis.y, ref counter);
         }
         else
         {
-            Vector3 startPosition = new Vector3((-_rectangle.x + elementScale.x) / 2 + elementScale.z, number * elementScale.y, (-_rectangle.y + elementScale.z) / 2);
-            SideCicle(startPosition, new Vector3(elementScale.x, 0, 0), Quaternion.identity, _basis.x, ref counter);
+            Vector3 startPosition = new Vector3((-_rectangle.x + elementScale.x) / 2 + elementScale.z + _offset, number * (elementScale.y + _offset), (-_rectangle.y + elementScale.z) / 2);
+            SideCicle(startPosition, new Vector3((elementScale.x + _offset), 0, 0), Quaternion.identity, _basis.x, ref counter);
 
-            Vector3 second = new Vector3((_rectangle.x - elementScale.z) / 2, number * elementScale.y, (-_rectangle.y + elementScale.x) / 2 + elementScale.z);
-            SideCicle(second, new Vector3(0, 0, elementScale.x), _rightRotation, _basis.y, ref counter);
+            Vector3 second = new Vector3((_rectangle.x - elementScale.z) / 2, number * (elementScale.y + _offset), (-_rectangle.y + elementScale.x) / 2 + elementScale.z + _offset);
+            SideCicle(second, new Vector3(0, 0, (elementScale.x + _offset)), _rightRotation, _basis.y, ref counter);
 
-            Vector3 third = new Vector3((_rectangle.x - elementScale.x) / 2 - elementScale.z, number * elementScale.y, (_rectangle.y - elementScale.z) / 2);
-            SideCicle(third, new Vector3(-elementScale.x, 0, 0), Quaternion.identity, _basis.x, ref counter);
+            Vector3 third = new Vector3((_rectangle.x - elementScale.x) / 2 - elementScale.z - _offset, number * (elementScale.y + _offset), (_rectangle.y - elementScale.z) / 2);
+            SideCicle(third, new Vector3(-(elementScale.x + _offset), 0, 0), Quaternion.identity, _basis.x, ref counter);
 
-            Vector3 fourth = new Vector3((-_rectangle.x + elementScale.z) / 2, number * elementScale.y, (_rectangle.y - elementScale.x) / 2 - elementScale.z);
-            SideCicle(fourth, new Vector3(0, 0, -elementScale.x), _rightRotation, _basis.y, ref counter);
+            Vector3 fourth = new Vector3((-_rectangle.x + elementScale.z) / 2, number * (elementScale.y + _offset), (_rectangle.y - elementScale.x) / 2 - elementScale.z - _offset);
+            SideCicle(fourth, new Vector3(0, 0, -(elementScale.x + _offset)), _rightRotation, _basis.y, ref counter);
         }
     }
 

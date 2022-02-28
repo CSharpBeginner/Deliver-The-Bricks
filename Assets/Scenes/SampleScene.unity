@@ -658,10 +658,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _timeBetweenFilling: 0.01
   _timeBetweenFalling: 0.01
-  _prefab: {fileID: 5032297494014745776, guid: 1429ead5c4bfe4142b768ba1f3f16ce4, type: 3}
+  _brick: {fileID: 5032297494014745776, guid: 1429ead5c4bfe4142b768ba1f3f16ce4, type: 3}
+  _floorTypes:
+  - {fileID: -8629752668086884000, guid: 75e49c4a52f016944a410cae3dbd9144, type: 3}
+  - {fileID: 4089347246466568764, guid: 00218dec6bc9c904683facc66b267d65, type: 3}
   _basis: {x: 6, y: 1}
   _height: 20
   _pool: {fileID: 0}
+  _offset: 0.005
 --- !u!4 &79767491
 Transform:
   m_ObjectHideFlags: 0
@@ -670,7 +674,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 79767489}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.014, z: 0}
+  m_LocalPosition: {x: 0, y: 1.18032, z: 0}
   m_LocalScale: {x: 1.7453581, y: 35.79767, z: 5.876206}
   m_Children: []
   m_Father: {fileID: 13513846}
@@ -1248,7 +1252,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh21754
+  m_Name: pb_Mesh21768
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -4295,7 +4299,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh21674
+  m_Name: pb_Mesh21688
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -4682,6 +4686,53 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 67c54278e919b154c9cbe6b180b2c210, type: 3}
+--- !u!1 &866559458
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 866559460}
+  - component: {fileID: 866559459}
+  m_Layer: 0
+  m_Name: FloorCreator (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &866559459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866559458}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c21d887b9b0c8b340a2f921e20104b46, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _basis: {x: 6, y: 1}
+  _offsetBetweenBricks: 0.005
+  _hasBrickBefore: 0
+  _prefab: {fileID: 5032297494014745776, guid: 1429ead5c4bfe4142b768ba1f3f16ce4, type: 3}
+--- !u!4 &866559460
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866559458}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 34
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &900712557
 Mesh:
   m_ObjectHideFlags: 0
