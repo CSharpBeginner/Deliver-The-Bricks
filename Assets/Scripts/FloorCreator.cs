@@ -57,7 +57,7 @@ public class FloorCreator : MonoBehaviour
         for (int i = 0; i < countInLine; i++)
         {
             Vector3 position = startPosition + translation * i;
-            GameObject gameObject = new GameObject($"Place {counter}", typeof(Place3));
+            GameObject gameObject = new GameObject($"Place {counter}", typeof(Place));
             gameObject.transform.position = position;
             gameObject.transform.rotation = rotation;
             gameObject.transform.parent = transform;

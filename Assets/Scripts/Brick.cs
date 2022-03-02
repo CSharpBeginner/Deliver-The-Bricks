@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider))]
@@ -21,11 +20,6 @@ public class Brick : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
     }
 
-    //private void OnDisable()
-    //{
-    //    Collide?.Invoke();
-    //}
-
     private void OnTriggerEnter(Collider other)
     {
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
@@ -33,23 +27,23 @@ public class Brick : MonoBehaviour
             _boxCollider.isTrigger = false;
             _rigidbody.useGravity = true;
             _rigidbody.isKinematic = false;
-            transform.SetParent(obstacle.transform);
+            transform.SetParent(null);
             Collide?.Invoke();
         }
     }
 
-    public void Fall(Vector3 targetPosition, Quaternion targetRotation)
+    public void Fall()
     {
         gameObject.SetActive(true);
-        StartCoroutine(Falling(targetPosition, targetRotation));
+        StartCoroutine(Falling());
     }
 
-    private IEnumerator Falling(Vector3 targetPosition, Quaternion targetRotation)
+    private IEnumerator Falling()
     {
         var waiting = new WaitForSeconds(_waitingTime);
         float progress = 0f;
         float startHeigth = transform.localPosition.y;
-        float target = targetPosition.y;
+        float target = 0f;
 
         while (progress < 1)
         {
@@ -60,15 +54,8 @@ public class Brick : MonoBehaviour
         }
 
         transform.localPosition = new Vector3(transform.localPosition.x, target, transform.localPosition.z);
-        bool IsWait = true;
-
-        while (IsWait)
-        {
-            IsWait = false;
-            yield return waiting;
-        }
-
-        transform.localPosition = targetPosition;
-        transform.localRotation = targetRotation;
+        yield return waiting;
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
     }
 }

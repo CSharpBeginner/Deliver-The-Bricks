@@ -49,39 +49,49 @@ public class Road : MonoBehaviour
     private void GetCellPosition()
     {
         List<Vector3> positions = _builder2.GetPositions();
+        List<Vector3> mainGridCenetrs = new List<Vector3>();
 
         foreach (Vector3 position in positions)
         {
-            Vector3 localPosition = position - _startPosition;
-            Vector3Int gridPositon = _grid.WorldToGridPosition(localPosition);
+            Vector3Int gridPositon = _grid.WorldToGridPosition(position);
 
             if (_filledCells.Contains(gridPositon) == false)
             {
                 _filledCells.Add(gridPositon);
-                Spawn(gridPositon);
+                Vector3 center = _grid.GridToWorldPosition(gridPositon);
+                mainGridCenetrs.Add(center);
             }
+        }
+
+        GetLocalCellPosition(mainGridCenetrs);
+    }
+
+    private void GetLocalCellPosition(List<Vector3> oldCenters)
+    {
+        Quaternion originalRotation = Quaternion.Euler(0, _builder2.transform.eulerAngles.y, 0);
+        Quaternion inverseRotation = Quaternion.Euler(0, -_builder2.transform.eulerAngles.y, 0);
+
+        foreach (Vector3 oldCenter in oldCenters)
+        {
+            Vector3 localPosition = oldCenter - _builder2.transform.position;
+            Vector3 rotatedLocalPosition = inverseRotation * localPosition;
+            //дальше не верно
+            Vector3Int gridPositon = _grid.WorldToGridPosition(rotatedLocalPosition);
+            Debug.Log(gridPositon);
+            Vector3 temp = _grid.GridToWorldPosition(gridPositon);
+            Vector3 spawnPoint = _builder2.transform.position + originalRotation * temp;
+            //Debug.Log("builder: " + _builder2.transform.position + "brick: " + originalRotation * temp);
+            Spawn(spawnPoint);
         }
     }
 
-    private float Calculate(Vector3 position)
+    private void Spawn(Vector3 worldPositon)
     {
-        float normalDistance = Mathf.Abs(position.x - _lastPosition.x);
-        float currentDistance = normalDistance / Mathf.Cos(Mathf.Deg2Rad * _lastRotation.eulerAngles.y);
-        float difference = currentDistance - normalDistance;
-        return difference;
-    }
-
-    private void Spawn(Vector3Int gridPositon)
-    {
-        Vector3 temp = _grid.GridToWorldPosition(gridPositon);
         Quaternion rotation = _lastRotation * _rightRotation;
-        Vector3 position = _startPosition + temp;
         Brick brick = Instantiate(_prefab);
-        brick.transform.position = position;
+        brick.transform.position = worldPositon;
         brick.transform.rotation = rotation;
-        Vector3 direction = brick.transform.right;
-        float distance = Calculate(position);
-        //brick.transform.position -= direction * distance;
         brick.gameObject.SetActive(true);
+        //Debug.Log("builder: " + _builder2.transform.position + "brick: " + brick.transform.position);
     }
 }
