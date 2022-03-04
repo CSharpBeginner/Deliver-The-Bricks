@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class AboveWaterZone : MonoBehaviour
@@ -9,6 +7,8 @@ public class AboveWaterZone : MonoBehaviour
         if (collision.gameObject.TryGetComponent<Player>(out Player player))
         {
             player.ActivateRoad();
+            Container container = collision.gameObject.GetComponentInChildren<Container>();
+            container.LoseBricks();
         }
     }
 
@@ -17,6 +17,8 @@ public class AboveWaterZone : MonoBehaviour
         if (collision.gameObject.TryGetComponent<Player>(out Player player))
         {
             player.DeactivateRoad();
+            Container container = collision.gameObject.GetComponentInChildren<Container>();
+            container.StopLoseBricks();
         }
     }
 }

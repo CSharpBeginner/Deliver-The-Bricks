@@ -4,55 +4,80 @@ using UnityEngine;
 
 public class Container : MonoBehaviour
 {
-    [SerializeField] private float _timeBetweenFilling;//0.01
-    [SerializeField] private float _timeBetweenFalling;//0.01
+    [SerializeField] private float _timeBeforeFalling;//0.2
+    [SerializeField] private int _appearingBricksCount;//3
+    [SerializeField] private int _fallingBricksCount;//3
     [SerializeField] private Brick _brick;
     [SerializeField] private Floor[] _floorTypes;
-    [SerializeField] private Vector2Int _basis;
+    [SerializeField] private Vector2Int _basis;//убрать перед сдачей
     [SerializeField] private int _height;//как вариант переместить в базис
     [SerializeField] private Pool _pool;
     [SerializeField] private float _offset;
 
     private List<Floor> _floors;
-    private BoxCollider _boxCollider;
+    private BoxCollider _boxCollider;//убрать перед сдачей
+    private Coroutine _losing;
 
     private void Awake()
     {
         _floors = new List<Floor>();
-        _boxCollider = GetComponent<BoxCollider>();
-        Vector2 basis = Calculate(_brick.transform.localScale);
-        _boxCollider.size = new Vector3(basis.x, _height, basis.y);
-    }
-
-    private Vector2 Calculate(Vector3 elementScale)
-    {
-        return new Vector2((elementScale.x + _offset) * _basis.x + elementScale.z, (elementScale.z + _offset) * _basis.y + elementScale.x);
+        _boxCollider = GetComponent<BoxCollider>();//убрать перед сдачей
+        _boxCollider.size = ComputeSize(_brick.transform.localScale);//убрать перед сдачей
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
         {
-            //добавить cooldown, чтобы метод гарантировано запускался только один раз
+            //добавить cooldown?
             Queue<Place> newFillingPlaces = GetNewFillingPlaces();
             DeleteEmptyFloors();
-            StartCoroutine(Falling(newFillingPlaces));//добавить задержку
-            //StartCoroutine(Wait());
+            StartCoroutine(Falling(newFillingPlaces, _timeBeforeFalling, _fallingBricksCount));
         }
     }
 
-    //private IEnumerator Wait()
-    //{
-    //    yield return new WaitForSeconds(0.1f);
-    //    Fall();
-    //}
+    public void LoseBricks()
+    {
+        _losing = StartCoroutine(Losing());
+    }
 
-    //private void Fall()
-    //{
-    //    Queue<Place> newFillingPlaces = GetNewFillingPlaces();
-    //    DeleteEmptyFloors();
-    //    StartCoroutine(Falling(newFillingPlaces));//добавить задержку
-    //}
+    public void StopLoseBricks()
+    {
+        if (_losing != null)
+        {
+            StopCoroutine(_losing);
+        }
+    }
+
+    private IEnumerator Losing()
+    {
+        while (_floors.Count != 0)
+        {
+            Floor floor = _floors[_floors.Count - 1];
+            foreach (Place place in floor.Places)
+            {
+                Brick brick = place.Brick;
+
+                if (brick != null)
+                {
+                    place.Free();
+                    brick.transform.SetParent(null);
+                    brick.gameObject.SetActive(false);
+                    yield return null;
+                }
+            }
+
+            if (floor.IsEmpty())
+            {
+                _floors.Remove(floor);
+            }
+        }
+    }
+
+    private Vector3 ComputeSize(Vector3 elementScale)//убрать перед сдачей
+    {
+        return new Vector3((elementScale.x + _offset) * _basis.x + elementScale.z, _height, (elementScale.z + _offset) * _basis.y + elementScale.x);
+    }
 
     private void DeleteEmptyFloors()
     {
@@ -112,38 +137,42 @@ public class Container : MonoBehaviour
         return newFillingPlaces;
     }
 
-    private IEnumerator Falling(Queue<Place> endPlaces)//это нужно! круто переписать. места мне больше не нужны, нужны только кирпичи
+    private static IEnumerator Falling(Queue<Place> endPlaces, float timeBeforeFalling, int countPerFrame)
     {
-        var waiting = new WaitForSeconds(_timeBetweenFalling);
+        yield return new WaitForSeconds(timeBeforeFalling);
 
-        foreach (Place place in endPlaces)
+        while (endPlaces.Count != 0)
         {
-            if (place.Brick != null)
+            int fallingBricksCount = Mathf.Clamp(endPlaces.Count, 0, countPerFrame);
+
+            for (int i = 0; i < fallingBricksCount; i++)
             {
-                place.Brick.Fall();
+                Brick brick = endPlaces.Dequeue().Brick;
+
+                if (brick != null)
+                {
+                    brick.Fall();
+                }
             }
 
-            yield return waiting;
+            yield return null;
         }
     }
 
     public void Fill(int count)
     {
-        int placesCount = 14;//magicNumber!!!!!!!
-        int floorsCount = (count - 1) / placesCount + 1;
-        int startIndex = _floors.Count;
         Queue<Brick> bricks = new Queue<Brick>(count);
 
-        for (int i = startIndex; i < startIndex + floorsCount; i++)
+        while (count > 0)
         {
-            Floor currentFloor = _floorTypes[i % _floorTypes.Length];
-            Floor floor = Instantiate(currentFloor, transform);
+            Floor floorType = _floorTypes[_floors.Count % _floorTypes.Length];
+            Floor floor = Instantiate(floorType, transform);
+            floor.transform.localPosition = new Vector3(0, (_brick.transform.localScale.y + _offset) * _floors.Count, 0);
             _floors.Add(floor);
-            floor.transform.localPosition = new Vector3(0, (_brick.transform.localScale.y + _offset) * i, 0);
-            int brickCountInFloor = Mathf.Clamp(count, 0, currentFloor.Places.Count);
-            count -= brickCountInFloor;
+            int bricksCountInFloor = Mathf.Clamp(count, 0, floor.Places.Count);
+            count -= bricksCountInFloor;
 
-            for (int j = 0; j < brickCountInFloor; j++)
+            for (int j = 0; j < bricksCountInFloor; j++)
             {
                 Brick brick = Instantiate(_brick);
                 floor.Places[j].SetBrick(brick);
@@ -154,17 +183,22 @@ public class Container : MonoBehaviour
             }
         }
 
-        StartCoroutine(Filling(bricks));
+        StartCoroutine(Appear(bricks, _appearingBricksCount));
     }
 
-    private IEnumerator Filling(Queue<Brick> bricks)
+    private static IEnumerator Appear(Queue<Brick> bricks, int countPerFrame)
     {
-        var waiting = new WaitForSeconds(_timeBetweenFilling);
         while (bricks.Count != 0)
         {
-            Brick brick = bricks.Dequeue();
-            brick.gameObject.SetActive(true);
-            yield return waiting;
+            int appearingBricksCount = Mathf.Clamp(bricks.Count, 0, countPerFrame);
+
+            for (int i = 0; i < appearingBricksCount; i++)
+            {
+                Brick brick = bricks.Dequeue();
+                brick.gameObject.SetActive(true);
+            }
+
+            yield return null;
         }
     }
 }

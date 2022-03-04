@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Builder : MonoBehaviour //Line
+public class Line : MonoBehaviour
 {
     [SerializeField] private float _width;
     [SerializeField] private float _horizontalStep;
