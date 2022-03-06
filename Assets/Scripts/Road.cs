@@ -3,23 +3,18 @@ using UnityEngine;
 
 public class Road : MonoBehaviour
 {
-    [SerializeField] private Brick _prefab;
+    [SerializeField] private float _flyingStep;//10
+    [SerializeField] private float _flyingWaitingTime;//0.1
+    [SerializeField] private Transform _rightSpawnPoint;
+    [SerializeField] private Transform _leftSpawnPoint;
+    [SerializeField] private int _halfOfFlyingBricksCount;
+    [SerializeField] private Container _container;
+    [SerializeField] private Floor _bricksLine;
+    [SerializeField] private Brick _brick;
     [SerializeField] private float _maxRotationAngle;
-    [SerializeField] private Line _line;
-    [SerializeField] private Grid _grid;
-    [SerializeField] private Grid2 _grid2;
-    [SerializeField] private float _verticalStep;
 
-    private Quaternion _rightRotation;
     private Vector3 _lastPosition;
     private Quaternion _lastRotation;
-    private HashSet<Vector3Int> _filledCells;
-
-    private void Awake()
-    {
-        _filledCells = new HashSet<Vector3Int>();
-        _rightRotation = Quaternion.Euler(0, 90, 0);
-    }
 
     private void OnEnable()
     {
@@ -37,37 +32,48 @@ public class Road : MonoBehaviour
         while (transform.position.z > _lastPosition.z)
         {
             Vector3 direction = (transform.position - _lastPosition).normalized;
-            _lastPosition += direction * _verticalStep;
+            _lastPosition += direction * _brick.transform.localScale.x * _container.transform.lossyScale.x;
             _lastRotation = Quaternion.RotateTowards(_lastRotation, transform.rotation, _maxRotationAngle);
-            _line.transform.position = _lastPosition;
-            //_builder.transform.rotation = _lastRotation;
-            GetCellPosition();
+            GetBrick();
         }
     }
 
-    private void GetCellPosition()
+    private void GetBrick()
     {
-        List<Vector3> positions = _line.GetPositions();
+        Quaternion rotation = _lastRotation;
+        Floor line = Instantiate(_bricksLine);
+        line.transform.position = _lastPosition;
+        line.transform.rotation = rotation;
+        line.transform.localScale = _container.transform.lossyScale;//создаем места
 
-        foreach (Vector3 position in positions)
+        List<Brick> bricks = _container.LoseBricks(line.Places.Count);//метод будет возвращать потерянные кирпичи
+        Build(bricks, line);//далее мы будем манипулировать с этими кирпичами
+    }
+
+    private void Build(List<Brick> bricks, Floor line)
+    {
+        for (int i = 0; i < bricks.Count; i++)
         {
-            Vector3Int gridPositon = _grid2.WorldToGridPosition(position);
+            bricks[i].transform.parent = line.Places[i].transform;
 
-            if (_filledCells.Contains(gridPositon) == false)
+            if (i < _halfOfFlyingBricksCount)
             {
-                _filledCells.Add(gridPositon);
-                Vector3 center = _grid2.GridToWorldPosition(gridPositon);
-                Spawn(center);
+                bricks[i].transform.position = _rightSpawnPoint.position;
+                bricks[i].transform.rotation = Quaternion.identity;
+                bricks[i].Fly(line.Places[i].transform, _flyingStep, _flyingWaitingTime);
+            }
+            else if (i < bricks.Count - _halfOfFlyingBricksCount)
+            {
+                bricks[i].gameObject.SetActive(true);
+                bricks[i].transform.localPosition = Vector3.zero;
+                bricks[i].transform.localRotation = Quaternion.identity;
+            }
+            else
+            {
+                bricks[i].transform.position = _leftSpawnPoint.position;
+                bricks[i].transform.rotation = Quaternion.identity;
+                bricks[i].Fly(line.Places[i].transform, _flyingStep, _flyingWaitingTime);
             }
         }
-    }
-
-    private void Spawn(Vector3 worldPositon)
-    {
-        Quaternion rotation = _lastRotation * _rightRotation;
-        Brick brick = Instantiate(_prefab);
-        brick.transform.position = worldPositon;
-        brick.transform.rotation = rotation;
-        brick.gameObject.SetActive(true);
     }
 }

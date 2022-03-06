@@ -7,8 +7,8 @@ public class AboveWaterZone : MonoBehaviour
         if (collision.gameObject.TryGetComponent<Player>(out Player player))
         {
             player.ActivateRoad();
-            Container container = collision.gameObject.GetComponentInChildren<Container>();
-            container.LoseBricks();
+            //Container container = collision.gameObject.GetComponentInChildren<Container>();
+            //container.LoseBricks();
         }
     }
 
@@ -17,8 +17,8 @@ public class AboveWaterZone : MonoBehaviour
         if (collision.gameObject.TryGetComponent<Player>(out Player player))
         {
             player.DeactivateRoad();
-            Container container = collision.gameObject.GetComponentInChildren<Container>();
-            container.StopLoseBricks();
+            //Container container = collision.gameObject.GetComponentInChildren<Container>();
+            //container.StopLoseBricks();
         }
     }
 }

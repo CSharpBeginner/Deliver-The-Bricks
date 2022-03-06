@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Container : MonoBehaviour
 {
+    //[SerializeField] private Road _road;
+    [SerializeField] private float _flyingStep;//10
+    [SerializeField] private float _flyingWaitingTime;//0.1
     [SerializeField] private float _timeBeforeFalling;//0.2
     [SerializeField] private int _appearingBricksCount;//3
     [SerializeField] private int _fallingBricksCount;//3
@@ -36,42 +39,36 @@ public class Container : MonoBehaviour
         }
     }
 
-    public void LoseBricks()
+    public List<Brick> LoseBricks(int count)
     {
-        _losing = StartCoroutine(Losing());
-    }
+        List<Brick> bricks = new List<Brick>(count);
 
-    public void StopLoseBricks()
-    {
-        if (_losing != null)
-        {
-            StopCoroutine(_losing);
-        }
-    }
-
-    private IEnumerator Losing()
-    {
         while (_floors.Count != 0)
         {
             Floor floor = _floors[_floors.Count - 1];
-            foreach (Place place in floor.Places)
-            {
-                Brick brick = place.Brick;
+            int placesCount = floor.Places.Count;
 
-                if (brick != null)
+            for (int j = 0; j < placesCount; j++)
+            {
+                if (floor.Places[j].Brick != null)
                 {
-                    place.Free();
-                    brick.transform.SetParent(null);
-                    brick.gameObject.SetActive(false);
-                    yield return null;
+                    bricks.Add(floor.Places[j].Brick);
+                    floor.Places[j].Free();
+                }
+
+                if (j == floor.Places.Count - 1)
+                {
+                    _floors.Remove(floor);
+                }
+
+                if (bricks.Count == count)
+                {
+                    return bricks;
                 }
             }
-
-            if (floor.IsEmpty())
-            {
-                _floors.Remove(floor);
-            }
         }
+
+        return bricks;
     }
 
     private Vector3 ComputeSize(Vector3 elementScale)//убрать перед сдачей
@@ -137,7 +134,7 @@ public class Container : MonoBehaviour
         return newFillingPlaces;
     }
 
-    private static IEnumerator Falling(Queue<Place> endPlaces, float timeBeforeFalling, int countPerFrame)
+    private IEnumerator Falling(Queue<Place> endPlaces, float timeBeforeFalling, int countPerFrame)
     {
         yield return new WaitForSeconds(timeBeforeFalling);
 
@@ -147,11 +144,12 @@ public class Container : MonoBehaviour
 
             for (int i = 0; i < fallingBricksCount; i++)
             {
-                Brick brick = endPlaces.Dequeue().Brick;
+                Place place = endPlaces.Dequeue();
+                Brick brick = place.Brick;
 
                 if (brick != null)
                 {
-                    brick.Fall();
+                    brick.Fly(place.transform, _flyingStep, _flyingWaitingTime);
                 }
             }
 
@@ -168,6 +166,8 @@ public class Container : MonoBehaviour
             Floor floorType = _floorTypes[_floors.Count % _floorTypes.Length];
             Floor floor = Instantiate(floorType, transform);
             floor.transform.localPosition = new Vector3(0, (_brick.transform.localScale.y + _offset) * _floors.Count, 0);
+            //floor.transform.localScale = 
+            //floor.transform.localPosition = new Vector3(0, (_brick.transform.localScale.y + _offset) * transform.lossyScale.y* _floors.Count, 0) ;
             _floors.Add(floor);
             int bricksCountInFloor = Mathf.Clamp(count, 0, floor.Places.Count);
             count -= bricksCountInFloor;

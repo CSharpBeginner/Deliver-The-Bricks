@@ -1,18 +1,18 @@
-using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(BoxCollider))]
 [RequireComponent(typeof(Rigidbody))]
 public class Brick : MonoBehaviour
 {
-    [SerializeField] private float _step;
-    [SerializeField] private float _waitingTime;
+    [SerializeField] private float _step;//10
+    [SerializeField] private float _waitingTime;//0.1
 
     private BoxCollider _boxCollider;
     private Rigidbody _rigidbody;
 
-    public Action Collide;
+    public event UnityAction Collide;
 
     private void Awake()
     {
@@ -54,6 +54,31 @@ public class Brick : MonoBehaviour
         }
 
         transform.localPosition = new Vector3(transform.localPosition.x, target, transform.localPosition.z);
+        yield return waiting;
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
+    }
+
+    public void Fly(Transform target, float step, float waitingTime)
+    {
+        gameObject.SetActive(true);
+        StartCoroutine(Flying(target, step, waitingTime));
+    }
+
+    private IEnumerator Flying(Transform target, float step, float waitingTime)
+    {
+        var waiting = new WaitForSeconds(waitingTime);
+        float progress = 0f;
+        Vector3 startPosition = transform.position;
+
+        while (progress < 1)
+        {
+            transform.position = Vector3.Lerp(startPosition, target.position, progress);
+            progress += step * Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = target.position;
         yield return waiting;
         transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.identity;
