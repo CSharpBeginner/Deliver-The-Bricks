@@ -4,38 +4,28 @@ using UnityEngine;
 
 public class Container : MonoBehaviour
 {
-    //[SerializeField] private Road _road;
-    [SerializeField] private float _flyingStep;//10
-    [SerializeField] private float _flyingWaitingTime;//0.1
-    [SerializeField] private float _timeBeforeFalling;//0.2
-    [SerializeField] private int _appearingBricksCount;//3
-    [SerializeField] private int _fallingBricksCount;//3
+    [SerializeField] private float _flyingStep;
+    [SerializeField] private float _flyingWaitingTime;
+    [SerializeField] private float _timeBeforeFalling;
+    [SerializeField] private float _offset;
+    [SerializeField] private int _appearingBricksCount;
+    [SerializeField] private int _fallingBricksCount;
     [SerializeField] private Brick _brick;
     [SerializeField] private Floor[] _floorTypes;
-    [SerializeField] private Vector2Int _basis;//убрать перед сдачей
-    [SerializeField] private int _height;//как вариант переместить в базис
     [SerializeField] private Pool _pool;
-    [SerializeField] private float _offset;
 
     private List<Floor> _floors;
-    private BoxCollider _boxCollider;//убрать перед сдачей
-    private Coroutine _losing;
 
     private void Awake()
     {
         _floors = new List<Floor>();
-        _boxCollider = GetComponent<BoxCollider>();//убрать перед сдачей
-        _boxCollider.size = ComputeSize(_brick.transform.localScale);//убрать перед сдачей
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
         {
-            //добавить cooldown?
-            Queue<Place> newFillingPlaces = GetNewFillingPlaces();
-            DeleteEmptyFloors();
-            StartCoroutine(Falling(newFillingPlaces, _timeBeforeFalling, _fallingBricksCount));
+            Invoke(nameof(Fall), _timeBeforeFalling);
         }
     }
 
@@ -71,9 +61,44 @@ public class Container : MonoBehaviour
         return bricks;
     }
 
-    private Vector3 ComputeSize(Vector3 elementScale)//убрать перед сдачей
+    public void Fill(int count)
     {
-        return new Vector3((elementScale.x + _offset) * _basis.x + elementScale.z, _height, (elementScale.z + _offset) * _basis.y + elementScale.x);
+        Queue<Brick> bricks = new Queue<Brick>(count);
+
+        while (count > 0)
+        {
+            Floor floorType = _floorTypes[_floors.Count % _floorTypes.Length];
+            Floor floor = Instantiate(floorType, transform);
+            floor.transform.localPosition = new Vector3(0, (_brick.transform.localScale.y + _offset) * _floors.Count, 0);
+            _floors.Add(floor);
+            int bricksCountInFloor = Mathf.Clamp(count, 0, floor.Places.Count);
+            count -= bricksCountInFloor;
+
+            for (int j = 0; j < bricksCountInFloor; j++)
+            {
+                Brick brick;
+
+                if (_pool.TryGive(out brick) == false)
+                {
+                    brick = Instantiate(_brick);
+                }
+
+                floor.Places[j].SetBrick(brick);
+                brick.transform.localRotation = Quaternion.identity;
+                brick.transform.localPosition = Vector3.zero;
+                brick.transform.localScale = _brick.transform.localScale;
+                bricks.Enqueue(brick);
+            }
+        }
+
+        StartCoroutine(Appear(bricks, _appearingBricksCount));
+    }
+
+    private void Fall()
+    {
+        Queue<Place> newFillingPlaces = GetNewFillingPlaces();
+        DeleteEmptyFloors();
+        StartCoroutine(Falling(newFillingPlaces, _fallingBricksCount));
     }
 
     private void DeleteEmptyFloors()
@@ -134,10 +159,8 @@ public class Container : MonoBehaviour
         return newFillingPlaces;
     }
 
-    private IEnumerator Falling(Queue<Place> endPlaces, float timeBeforeFalling, int countPerFrame)
+    private IEnumerator Falling(Queue<Place> endPlaces, int countPerFrame)
     {
-        yield return new WaitForSeconds(timeBeforeFalling);
-
         while (endPlaces.Count != 0)
         {
             int fallingBricksCount = Mathf.Clamp(endPlaces.Count, 0, countPerFrame);
@@ -149,7 +172,7 @@ public class Container : MonoBehaviour
 
                 if (brick != null)
                 {
-                    brick.Fly(place.transform, _flyingStep, _flyingWaitingTime);
+                    brick.Fall(place.transform, _flyingStep, _flyingWaitingTime);
                 }
             }
 
@@ -157,36 +180,7 @@ public class Container : MonoBehaviour
         }
     }
 
-    public void Fill(int count)
-    {
-        Queue<Brick> bricks = new Queue<Brick>(count);
-
-        while (count > 0)
-        {
-            Floor floorType = _floorTypes[_floors.Count % _floorTypes.Length];
-            Floor floor = Instantiate(floorType, transform);
-            floor.transform.localPosition = new Vector3(0, (_brick.transform.localScale.y + _offset) * _floors.Count, 0);
-            //floor.transform.localScale = 
-            //floor.transform.localPosition = new Vector3(0, (_brick.transform.localScale.y + _offset) * transform.lossyScale.y* _floors.Count, 0) ;
-            _floors.Add(floor);
-            int bricksCountInFloor = Mathf.Clamp(count, 0, floor.Places.Count);
-            count -= bricksCountInFloor;
-
-            for (int j = 0; j < bricksCountInFloor; j++)
-            {
-                Brick brick = Instantiate(_brick);
-                floor.Places[j].SetBrick(brick);
-                brick.transform.localRotation = Quaternion.identity;
-                brick.transform.localPosition = Vector3.zero;
-                brick.transform.localScale = _brick.transform.localScale;
-                bricks.Enqueue(brick);
-            }
-        }
-
-        StartCoroutine(Appear(bricks, _appearingBricksCount));
-    }
-
-    private static IEnumerator Appear(Queue<Brick> bricks, int countPerFrame)
+    private IEnumerator Appear(Queue<Brick> bricks, int countPerFrame)
     {
         while (bricks.Count != 0)
         {

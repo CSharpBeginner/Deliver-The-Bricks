@@ -4,6 +4,7 @@ using TMPro;
 public class Bonus : MonoBehaviour
 {
     [SerializeField] private int _count;
+
     private TMP_Text _text;
 
     private void Awake()

@@ -9,7 +9,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float _verticalSpeed;
     [SerializeField] private float _rotationSpeed;
     [SerializeField] private float _horizontalMultiplier;
-    [SerializeField] private GameObject _road;
+    [SerializeField] private Road _road;
 
     private Rigidbody _rigidbody;
     private Coroutine _currentCoroutine;
@@ -34,14 +34,23 @@ public class Player : MonoBehaviour
         _inputer.NormalizedDifferenceChanged -= OnNormalizedDifferenceChanged;
     }
 
+    private void Update()
+    {
+        Vector3 difference = Vector3.forward * _verticalSpeed * Time.deltaTime + Vector3.right * _horizontalDifference;
+        Vector3 targetPosition = transform.position + difference;
+        Quaternion targetRotation = Quaternion.LookRotation(difference);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+        _rigidbody.MovePosition(targetPosition);
+    }
+
     public void ActivateRoad()
     {
-        _road.SetActive(true);
+        _road.gameObject.SetActive(true);
     }
 
     public void DeactivateRoad()
     {
-        _road.SetActive(false);
+        _road.gameObject.SetActive(false);
     }
 
     private void RememberPositionX()
@@ -75,14 +84,5 @@ public class Player : MonoBehaviour
         {
             _horizontalDifference = 0;
         }
-    }
-
-    private void Update()
-    {
-        Vector3 difference = Vector3.forward * _verticalSpeed * Time.deltaTime + Vector3.right * _horizontalDifference;
-        Vector3 targetPosition = transform.position + difference;
-        Quaternion targetRotation = Quaternion.LookRotation(difference);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
-        _rigidbody.MovePosition(targetPosition);
     }
 }

@@ -6,9 +6,6 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Rigidbody))]
 public class Brick : MonoBehaviour
 {
-    [SerializeField] private float _step;//10
-    [SerializeField] private float _waitingTime;//0.1
-
     private BoxCollider _boxCollider;
     private Rigidbody _rigidbody;
 
@@ -32,40 +29,21 @@ public class Brick : MonoBehaviour
         }
     }
 
-    public void Fall()
+    public void Reset()
+    {
+        gameObject.SetActive(false);
+        _boxCollider.isTrigger = true;
+        _rigidbody.useGravity = false;
+        _rigidbody.isKinematic = true;
+    }
+
+    public void Fall(Transform target, float step, float waitingTime)
     {
         gameObject.SetActive(true);
-        StartCoroutine(Falling());
+        StartCoroutine(Falling(target, step, waitingTime));
     }
 
-    private IEnumerator Falling()
-    {
-        var waiting = new WaitForSeconds(_waitingTime);
-        float progress = 0f;
-        float startHeigth = transform.localPosition.y;
-        float target = 0f;
-
-        while (progress < 1)
-        {
-            float height = Mathf.Lerp(startHeigth, target, progress);
-            transform.localPosition = new Vector3(transform.localPosition.x, height, transform.localPosition.z);
-            progress += _step * Time.deltaTime;
-            yield return null;
-        }
-
-        transform.localPosition = new Vector3(transform.localPosition.x, target, transform.localPosition.z);
-        yield return waiting;
-        transform.localPosition = Vector3.zero;
-        transform.localRotation = Quaternion.identity;
-    }
-
-    public void Fly(Transform target, float step, float waitingTime)
-    {
-        gameObject.SetActive(true);
-        StartCoroutine(Flying(target, step, waitingTime));
-    }
-
-    private IEnumerator Flying(Transform target, float step, float waitingTime)
+    private IEnumerator Falling(Transform target, float step, float waitingTime)
     {
         var waiting = new WaitForSeconds(waitingTime);
         float progress = 0f;
