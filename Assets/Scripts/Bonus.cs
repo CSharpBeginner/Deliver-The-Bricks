@@ -15,7 +15,7 @@ public class Bonus : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<Player>(out Player player))
+        if (other.GetComponent<Player>() != null)
         {
             Container container = other.GetComponentInChildren<Container>();
             container.Fill(_count);

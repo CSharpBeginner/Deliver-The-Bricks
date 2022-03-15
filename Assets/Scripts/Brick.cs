@@ -19,14 +19,19 @@ public class Brick : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
+        if (other.GetComponent<Obstacle>() != null)
         {
-            _boxCollider.isTrigger = false;
-            _rigidbody.useGravity = true;
-            _rigidbody.isKinematic = false;
-            transform.SetParent(null);
-            Collide?.Invoke();
+            ActivatePhysic();
         }
+    }
+
+    private void ActivatePhysic()
+    {
+        _boxCollider.isTrigger = false;
+        _rigidbody.useGravity = true;
+        _rigidbody.isKinematic = false;
+        transform.SetParent(null);
+        Collide?.Invoke();
     }
 
     public void Reset()

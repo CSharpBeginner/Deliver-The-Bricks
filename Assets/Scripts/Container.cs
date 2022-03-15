@@ -23,7 +23,7 @@ public class Container : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.TryGetComponent<Obstacle>(out Obstacle obstacle))
+        if (other.GetComponent<Obstacle>() != null)
         {
             Invoke(nameof(Fall), _timeBeforeFalling);
         }
